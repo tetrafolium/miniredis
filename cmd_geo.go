@@ -12,12 +12,13 @@ import (
 
 // commandsGeo handles GEOADD, GEORADIUS etc.
 func commandsGeo(m *Miniredis) {
-	m.srv.Register("GEOADD", m.cmdGeoAdd)
-	m.srv.Register("GEORADIUS", m.cmdGeoRadius)
+	m.srv.Register("GEOADD", m.cmdGeoadd)
+	m.srv.Register("GEOPOS", m.cmdGeopos)
+	m.srv.Register("GEORADIUS", m.cmdGeoradius)
 }
 
 // GEOADD
-func (m *Miniredis) cmdGeoAdd(c *server.Peer, cmd string, args []string) {
+func (m *Miniredis) cmdGeoadd(c *server.Peer, cmd string, args []string) {
 	if len(args) < 3 || len(args[1:])%3 != 0 {
 		setDirty(c)
 		c.WriteError(errWrongNumber(cmd))
@@ -75,6 +76,44 @@ func (m *Miniredis) cmdGeoAdd(c *server.Peer, cmd string, args []string) {
 	})
 }
 
+// GEOPOS
+func (m *Miniredis) cmdGeopos(c *server.Peer, cmd string, args []string) {
+	if len(args) < 1 {
+		setDirty(c)
+		c.WriteError(errWrongNumber(cmd))
+		return
+	}
+	if !m.handleAuth(c) {
+		return
+	}
+	if m.checkPubsub(c) {
+		return
+	}
+	key, args := args[0], args[1:]
+
+	withTx(m, c, func(c *server.Peer, ctx *connCtx) {
+		db := m.db(ctx.selectedDB)
+
+		if db.exists(key) && db.t(key) != "zset" {
+			c.WriteError(ErrWrongType.Error())
+			return
+		}
+
+		c.WriteLen(len(args))
+		for _, l := range args {
+			if !db.ssetExists(key, l) {
+				c.WriteNull()
+				continue
+			}
+			score := db.ssetScore(key, l)
+			c.WriteLen(2)
+			long, lat := fromGeohash(uint64(score))
+			c.WriteBulk(formatGeo(long))
+			c.WriteBulk(formatGeo(lat))
+		}
+	})
+}
+
 type geoDistance struct {
 	Name      string
 	Distance  float64
@@ -82,7 +121,7 @@ type geoDistance struct {
 	Latitude  float64
 }
 
-func (m *Miniredis) cmdGeoRadius(c *server.Peer, cmd string, args []string) {
+func (m *Miniredis) cmdGeoradius(c *server.Peer, cmd string, args []string) {
 	if len(args) < 5 {
 		setDirty(c)
 		c.WriteError(errWrongNumber(cmd))

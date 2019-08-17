@@ -38,6 +38,40 @@ func TestGeoadd(t *testing.T) {
 	})
 }
 
+func TestGeopos(t *testing.T) {
+	s, err := Run()
+	ok(t, err)
+	defer s.Close()
+	c, err := redis.Dial("tcp", s.Addr())
+	ok(t, err)
+	defer c.Close()
+
+	_, err = c.Do("GEOADD", "Sicily", 13.361389, 38.115556, "Palermo")
+	ok(t, err)
+
+	t.Run("ok", func(t *testing.T) {
+		pos, err := redis.Positions(c.Do("GEOPOS", "Sicily", "Palermo"))
+		ok(t, err)
+		equals(t, 1, len(pos))
+		equals(t, [2]float64{13.36139, 38.11556}, *pos[0])
+	})
+
+	t.Run("no location", func(t *testing.T) {
+		pos, err := redis.Positions(c.Do("GEOPOS", "Sicily", "Corleone"))
+		ok(t, err)
+		equals(t, []*[2]float64{nil}, pos)
+	})
+
+	t.Run("failure cases", func(t *testing.T) {
+		_, err = c.Do("GEOPOS")
+		mustFail(t, err, "ERR wrong number of arguments for 'geopos' command")
+		_, err = c.Do("SET", "foo", "bar")
+		ok(t, err)
+		_, err = c.Do("GEOPOS", "foo")
+		mustFail(t, err, msgWrongType)
+	})
+}
+
 // Test GEOADD / GEORADIUS
 func TestGeo(t *testing.T) {
 	s, err := Run()
