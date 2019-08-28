@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/alicebob/miniredis/v2/server"
+	"github.com/tetrafolium/miniredis/server"
 )
 
 // commandsString handles all string value operations.

@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/alicebob/miniredis/v2/server"
+	"github.com/tetrafolium/miniredis/server"
 )
 
 // commandsSet handles all set value operations.

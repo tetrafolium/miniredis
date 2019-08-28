@@ -3,7 +3,7 @@
 package miniredis
 
 import (
-	"github.com/alicebob/miniredis/v2/server"
+	"github.com/tetrafolium/miniredis/server"
 )
 
 // commandsTransaction handles MULTI &c.

@@ -24,7 +24,7 @@ import (
 
 	redigo "github.com/gomodule/redigo/redis"
 
-	"github.com/alicebob/miniredis/v2/server"
+	"github.com/tetrafolium/miniredis/server"
 )
 
 type hashKey map[string]string

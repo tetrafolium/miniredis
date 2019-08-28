@@ -5,7 +5,7 @@ package miniredis
 import (
 	"strconv"
 
-	"github.com/alicebob/miniredis/v2/server"
+	"github.com/tetrafolium/miniredis/server"
 )
 
 func commandsConnection(m *Miniredis) {
