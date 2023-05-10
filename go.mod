@@ -1,4 +1,4 @@
-module github.com/alicebob/miniredis/v2
+module github.com/tetrafolium/miniredis
 
 require (
 	github.com/alicebob/gopher-json v0.0.0-20180125190556-5a6b3ba71ee6
